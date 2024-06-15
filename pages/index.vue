@@ -1,23 +1,48 @@
 <template>
   <k-page>
-    <k-navbar title="My App" />
+    <Header />
 
     <k-block strong>
-      <p>Here is your Nuxt & Konsta UI app. Let's see what we have here.</p>
+      <p id="story"> {{ story }} </p>
     </k-block>
-    <k-block-title>Navigation</k-block-title>
-    <k-list>
-      <k-list-item href="/about/" title="About" />
-      <k-list-item href="/form/" title="Form" />
-    </k-list>
+
 
     <k-block strong class="flex space-x-4">
-      <k-button>Button 1</k-button>
-      <k-button>Button 2</k-button>
+      <k-button @click="run">Button 1</k-button>
+<!--      <k-button>Button 2</k-button>-->
     </k-block>
+
+    <Bottom />
   </k-page>
 </template>
-<script>
+
+<script setup lang="ts">
+import Header from "~/components/Header.vue";
+import Bottom from "~/components/Bottom.vue";
+
+const {$model} = useNuxtApp()
+const story = ref<string>("Press the button to generate the advices.");
+
+function run(){
+  story.value = "Generating advices...";
+
+  // Provide a prompt that contains text
+  const prompt = "Imagine an investment mobile game." +
+      "Here you can analyze in-game purchases and find how to save the money for creating investment advices. " +
+      "For example, I am a person who likes water sports and I want to invest in something related to it. " +
+      "Generate a list of 5 random investment advices from the water sport category. " +
+      "Wrap the response in json, each option should have an advice field. Example of response: " +
+      "{\"advice\": \"text\"}."
+
+  // To generate text output, call generateContent with the text input
+  $model.generateContent(prompt).then((response) => {
+    story.value = response.response.text();
+  });
+}
+
+</script>
+
+<script lang="ts">
 // Konsta UI components
 import {
   kPage,
@@ -42,4 +67,5 @@ export default {
     kBlockTitle,
   },
 };
+
 </script>

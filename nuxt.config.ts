@@ -4,13 +4,15 @@ export default defineNuxtConfig({
   build: {
     transpile: ['konsta'],
   },
+
+  modules: ['nuxt-icon'],
   postcss: {
     plugins: {
       tailwindcss: {},
       autoprefixer: {},
     },
   },
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/globals.css'],
   runtimeConfig: {
     public: {
       firebase: {
