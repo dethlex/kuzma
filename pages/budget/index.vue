@@ -67,9 +67,9 @@
       <k-card
           v-for="[k, v] in purchases"
           :header="k">
-        <k-link :href="'/budget/' + k.toLowerCase().replaceAll(' ', '_')">
+<!--        <k-link :href="'/budget/' + k.toLowerCase().replaceAll(' ', '_')">-->
           € {{ v.toFixed(2) }} | € {{ b.Limit }}
-        </k-link>
+<!--        </k-link>-->
       </k-card>
 
     </k-block>

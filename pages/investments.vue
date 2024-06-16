@@ -2,27 +2,70 @@
   <k-page>
     <Header/>
 
-    <k-card header="Kuzma tip" v-if="tip !== ''" >
-      {{ tip }}
+    <template v-if="!done">
+      <k-block strong>
+        <p>Analysing your purchases...</p>
+      </k-block>
+    </template>
 
-      <k-button v-if="done">Buy via Interactive Brokers</k-button>
-    </k-card>
+    <template v-if="done">
+      <k-card header="Recommended investment amount:">
+        € {{ tip.recommended.amount }}
+      </k-card>
 
+      <k-segmented strong rounded>
+        <k-segmented-button
+            strong
+            rounded
+            :active="activeSegmented === 1"
+            @click="() => (activeSegmented = 1)"
+        >
+          Faster to the goal
+        </k-segmented-button>
+        <k-segmented-button
+            strong
+            rounded
+            :active="activeSegmented === 2"
+            @click="() => (activeSegmented = 2)"
+        >
+          Average result
+        </k-segmented-button>
+        <k-segmented-button
+            strong
+            rounded
+            :active="activeSegmented === 3"
+            @click="() => (activeSegmented = 3)"
+        >
+          Slowly but surely
+        </k-segmented-button>
+      </k-segmented>
+
+      <k-list strong>
+        <k-list-item
+            v-for="item in tip[activeSegmented === 1 ? 'high' : activeSegmented === 2 ? 'medium' : 'low']"
+            :title="item['company'] + ' - € ' + item['amount']"/>
+      </k-list>
+
+
+      <k-block-title>Goals</k-block-title>
+      <k-block>
+        <k-card
+            v-for="goal in goals"
+            :header="goal.Name"
+            header-divider
+            :footer="'Until ' + goal.Date.toLocaleDateString()"
+        >
+          € {{ goal.Current + earnings[activeSegmented] }} | € {{ goal.Total }}
+        </k-card>
+
+      </k-block>
+
+      <k-button>Buy via Interactive Brokers</k-button>
+    </template>
     <!-- На какие категории потратили больше всего денег-->
     <!-- На чем можно было сэкономить-->
     <!-- Что мне больше всего нравится-->
     <!-- На что я коплю и во что инвестировать на основе этого-->
-
-    <k-block-title>Goals</k-block-title>
-    <k-block>
-      <k-card
-          v-for="goal in goals"
-          :header="goal.Name"
-          :footer="'Until ' + goal.Date.toLocaleDateString()"
-      >
-        € {{ goal.Current }} | € {{ goal.Total }}
-      </k-card>
-    </k-block>
 
 
     <Bottom/>
@@ -32,32 +75,20 @@
 <script setup lang="ts">
 import Header from "~/components/Header.vue";
 import Bottom from "~/components/Bottom.vue";
-import {
-  kPage,
-  kBlockTitle,
-  kCard,
-  kBlockHeader,
-  kListItem,
-  kBlock,
-  kTable,
-  kTableHead,
-  kTableBody,
-  kTableCell,
-  kTableRow,
-  kList,
-  kListInput,
-  kButton,
-} from 'konsta/vue';
+import {kBlock, kBlockTitle, kButton, kCard, kPage, kSegmented, kSegmentedButton, kList, kListItem} from 'konsta/vue';
 
 import type {Purchase} from "~/entities/purchase";
-import {doc, getDocs, collection} from "firebase/firestore";
+import {collection, getDocs} from "firebase/firestore";
 import type {Goal} from "~/entities/goal";
 
 const {$firestore, $model} = useNuxtApp()
 
-const tip = ref<string>("")
+const tip = ref<any>()
 
 const goals = ref<Goal[]>([])
+
+const activeSegmented = ref(1);
+const earnings = ref<number[]>([])
 
 const goodPurchases = ref<Map<string, number>>(new Map<string, number>())
 const badPurchases = ref<Map<string, number>>(new Map<string, number>())
@@ -90,8 +121,20 @@ onMounted(async () => {
     }
   })
 
+  /*
+
+  json:
+  {
+"recommended" : {"amount": 70},
+"high" : [{"company": "Google", "amount": 50}, {"company": "Amazon", "amount": 20}],
+"medium" : [{"company": "Apple", "amount": 50}, {"company": "Tesla", "amount": 20}],
+"low" : [{"company": "Microsoft", "amount": 50}, {"company": "Facebook", "amount": 20}],
+  }
+
+   */
+
   if (goodPurchases.value.size > 0 && badPurchases.value.size > 0) {
-    tip.value = "Analyzing your purchases..."
+    // tip.value = "Analyzing your purchases..."
 
     const prompt = 'I\'m playing the game. All coincidences with real names in this game are coincidental. ' +
         'In this game I can buy products and I have obligated expenses, but I should save money for reaching the goal. ' +
@@ -108,14 +151,33 @@ onMounted(async () => {
             .join(',\n') +
         '\n\n' + 'Also I\'m trying to save money for my goals. Here is the list of my goals:\n' +
         goals.value.map((goal, index) => `${index + 1}. ${goal.Name} - € ${goal.Total}`).join(',\n') +
-        '\n\n' + 'Count how much I could have saved if I did not bought the worst purchases and ' +
-        'give me advice which companies in lists above I should invest with possible saved money for reaching the goal.' +
-        ' Give me a short answer without any formatting.'
+        '\n\n' + 'Calculate a recommended amount to invest based on the purchases I would save on. ' +
+        'Also propose 3 plans with different types of risks (high, medium and low) and possible earnings for investing in companies from the list above based on the amount calculated.' +
+        ' Advice should be in plain JSON without any formatting. For example:\n' +
+        ' {' +
+        '"recommended" : {"amount": 70},' +
+        '"high" : [{"company": "Google", "amount": 50, "earnings": 100}, {"company": "Amazon", "amount": 20, "earnings": 100}],' +
+        '"medium" : [{"company": "Apple", "amount": 50, "earnings": 70}, {"company": "Tesla", "amount": 20, "earnings": 70}],' +
+        '"low" : [{"company": "Microsoft", "amount": 50, "earnings": 50}, {"company": "Facebook", "amount": 20, "earnings": 50}],' +
+        '}'
 
     console.log(prompt)
 
     $model.generateContent(prompt).then((response) => {
-      tip.value = response.response.text();
+      tip.value = JSON.parse(
+          response.response.text().replaceAll("`", '').replaceAll("json", '')
+      )
+
+      tip.value.high.forEach((item: any) => {
+        earnings.value[1] = item.earnings
+      })
+      tip.value.medium.forEach((item: any) => {
+        earnings.value[2] = item.earnings
+      })
+      tip.value.low.forEach((item: any) => {
+        earnings.value[3] = item.earnings
+      })
+
       done.value = true
     });
   }

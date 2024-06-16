@@ -126,7 +126,8 @@ onMounted(async () => {
             .sort((a, b) => b[1] - a[1])
             .map(([key, value], index) => `${index + 1}. ${key} - € ${value}`)
             .join(', ') +
-        ' What should I cut off from my expenses? And how much I could have saved if I did not bought them.' +
+        ' Which one or two products from the list above should I cut off from my expenses?' +
+        ' And how much I could have saved if I did not bought them.' +
         ' Give me a short answer without any formatting.'
     console.log(prompt)
 
