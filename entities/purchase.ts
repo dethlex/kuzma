@@ -7,4 +7,5 @@ export interface Purchase {
     ExpenseSubType: string
     Amount: number
     Emotion: number
+    Heartbeat: number
 }

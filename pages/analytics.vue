@@ -6,6 +6,11 @@
       {{ tip }}
     </k-card>
 
+    <k-block-title>Charts</k-block-title>
+    <k-block>
+      <k-button @click="() => (popupOpened = true)">Pulse rate dependence on price</k-button>
+    </k-block>
+
     <k-block-title>Happy 😁</k-block-title>
     <k-block-header>{{ happyPurchases.length }} transactions for € {{ totalHappy.toFixed(2) }}</k-block-header>
     <k-list strong-ios outline-ios>
@@ -53,6 +58,22 @@
 
     <Bottom/>
   </k-page>
+
+  <k-popup :opened="popupOpened" @backdropclick="() => (popupOpened = false)">
+    <k-page>
+      <k-navbar title="Pulse">
+        <template #right>
+          <k-link navbar @click="() => (popupOpened = false)"> Close</k-link>
+        </template>
+      </k-navbar>
+      <k-block class="space-y-4">
+        <Scatter v-if="popupOpened"
+            :data="chartData"
+            :options="chartOptions"
+        />
+      </k-block>
+    </k-page>
+  </k-popup>
 </template>
 
 <script setup lang="ts">
@@ -64,18 +85,31 @@ import {
   kCard,
   kBlockHeader,
   kListItem,
-
-  kTable,
-  kTableHead,
-  kTableBody,
-  kTableCell,
-  kTableRow,
+  kLink,
+  kBlock,
+  kPopup,
   kList,
-  kListInput,
+  kNavbar,
   kButton,
 } from 'konsta/vue';
+import {Scatter} from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  LineElement,
+  PointElement,
+} from 'chart.js'
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement)
+
 import type {Purchase} from "~/entities/purchase";
 import {doc, getDocs, collection} from "firebase/firestore";
+import type {Point} from 'chart.js'
 
 const {$firestore, $model} = useNuxtApp()
 
@@ -90,6 +124,26 @@ const totalNeutral = ref<number>(0)
 
 const badPurchases = ref<Map<string, number>>(new Map<string, number>())
 const tip = ref<string>("")
+
+const popupOpened = ref(false);
+
+
+// const bubbles = <Point[]>([])
+const chartData = ref({
+  // labels: ['January', 'February', 'March', 'April', 'May'],
+  datasets: [
+    {
+      label: 'Pulse on purchase',
+      backgroundColor: '#f87979',
+      data: [] as Point[],
+    },
+  ],
+})
+
+const chartOptions = ref({
+  responsive: true,
+  maintainAspectRatio: false,
+})
 
 onMounted(async () => {
   const allPurchases = collection($firestore, 'purchases')
@@ -113,6 +167,11 @@ onMounted(async () => {
       neutralPurchases.value.push(purchase)
       totalNeutral.value += purchase.Amount
     }
+
+    chartData.value.datasets[0].data.push({
+      x: purchase.Heartbeat,
+      y: purchase.Amount,
+    } as Point)
   })
 
   if (badPurchases.value.size > 0) {
@@ -137,6 +196,7 @@ onMounted(async () => {
   }
 
 })
+
 
 </script>
 

@@ -18,6 +18,7 @@
             <k-table-cell header class="text-right">Expense Sub Type</k-table-cell>
             <k-table-cell header class="text-right">Amount</k-table-cell>
             <k-table-cell header class="text-right">Emotion</k-table-cell>
+            <k-table-cell header class="text-right">Heartbeat</k-table-cell>
           </k-table-row>
         </k-table-head>
         <k-table-body>
@@ -29,6 +30,7 @@
             <k-table-cell class="text-right">{{ purchase.ExpenseSubType }}</k-table-cell>
             <k-table-cell class="text-right">{{ purchase.Amount }}</k-table-cell>
             <k-table-cell class="text-right">{{ purchase.Emotion }}</k-table-cell>
+            <k-table-cell class="text-right">{{ purchase.Heartbeat }}</k-table-cell>
           </k-table-row>
         </k-table-body>
       </k-table>
@@ -78,6 +80,7 @@ function uploadPurchases(f: File) {
             ExpenseSubType: purchase['sub_type'],
             Amount: parseFloat(purchase['amount']),
             Emotion: purchase['emotion'],
+            Heartbeat: purchase['Heartbit'],
           })
         })
       }
