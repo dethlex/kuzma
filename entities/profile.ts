@@ -10,16 +10,10 @@ export interface Profile {
 
     Expenses: Expense[]
     Hobbies: string[]
-    Goals: Goal[]
 }
 
 export interface Expense {
     Type: string
     Price: number
     Description: string
-}
-
-export interface Goal {
-    Name: string
-    Date: Date
 }

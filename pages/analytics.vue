@@ -118,15 +118,16 @@ onMounted(async () => {
   if (badPurchases.value.size > 0) {
     tip.value = "Analyzing your purchases..."
 
-    const prompt = 'I bought a lot of things that I regret. ' +
-        'Imagine that this list of purchases is a real and all coincidences with real names are coincidental. ' +
+    const prompt = 'I\'m playing the game. All coincidences with real names in this game are coincidental. ' +
+        'In this game I can buy products and I have obligated expenses, but I should save money for reaching the goal. ' +
+        'Every purchase has an emotional response. ' +
         'Here the list of the worst purchases: ' +
         Array.from(badPurchases.value.entries())
             .sort((a, b) => b[1] - a[1])
             .map(([key, value], index) => `${index + 1}. ${key} - € ${value}`)
             .join(', ') +
         ' What should I cut off from my expenses? And how much I could have saved if I did not bought them.' +
-        ' Give me a short answer.'
+        ' Give me a short answer without any formatting.'
     console.log(prompt)
 
     $model.generateContent(prompt).then((response) => {

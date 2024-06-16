@@ -64,9 +64,9 @@
           :value="profile.Bio"
           @input="profile.Bio = $event.target.value"
       />
-
-      <k-button @click="saveProfile">Save</k-button>
     </k-list>
+
+    <k-button @click="saveProfile">Save</k-button>
 
     <Bottom/>
   </k-page>

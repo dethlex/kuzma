@@ -1,5 +1,9 @@
 <template>
-  <k-navbar title="KuzmaAI" />
+  <k-navbar title="KuzmaAI">
+    <template #left>
+      <k-link navbar href="/">Main</k-link>
+    </template>
+  </k-navbar>
 
 </template>
 
